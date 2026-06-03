@@ -21,7 +21,40 @@ Contract docs: https://agglayer.github.io/protocol-team-docs/smart-contracts/v12
 
 PP is the narrow, bridge-safety proof. It doesn't attest to a chain's state transition — it only proves that withdrawal claims a chain makes against the unified bridge are backed by real deposits, so a misbehaving chain can't drain other chains' assets.
 
-![PP network architecture](images/cdk-op-reth-pp.svg)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    box OP Stack (Network)
+        participant opnode as op-node
+        participant opreth as op-reth
+        participant opbatcher as op-batcher
+    end
+    box Polygon Stack
+        participant bridge as bridge-service
+        participant aggkit
+    end
+    box Agglayer
+        participant aggnode as agglayer-node
+    end
+    participant L1
+    participant SP as Succinct Prover Network
+
+    User->>opreth: Submit txn for sequencing
+    opnode->>opreth: Sequence blocks
+    opbatcher->>L1: Submit sequenced batch
+    aggkit->>opreth: Set GER
+    aggkit->>aggnode: Submit certificate for settlement
+    aggnode->>SP: Request Pessimistic proof
+    aggnode->>L1: Submit settlement txn
+
+    autonumber off
+    Note over bridge,aggkit: Periodical operations
+    bridge-->>L1: Read bridge events
+    aggkit-->>L1: Read GER/bridge events
+    bridge-->>opreth: Read bridge events
+    aggkit-->>opreth: Read GER/bridge events
+```
 
 ### Full Execution Proof (FEP) — AggchainFEP
 
@@ -29,7 +62,49 @@ Contract docs: https://agglayer.github.io/protocol-team-docs/smart-contracts/v12
 
 FEP is the strong proof: it cryptographically attests to the chain's full state transition using SP1 (Succinct) zero-knowledge proofs, on top of the bridge-safety guarantee the PP provides.
 
-![FEP network architecture](images/cdk-op-reth-fep.svg)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    box OP Stack (Network)
+        participant opnode as op-node
+        participant opreth as op-reth
+        participant opbatcher as op-batcher
+    end
+    box Polygon Stack
+        participant bridge as bridge-service
+        participant aggkit
+        participant aggprover as aggkit-prover
+        participant proposer as op-succinct-proposer
+    end
+    box Agglayer
+        participant aggnode as agglayer-node
+    end
+    participant L1
+    participant SP as Succinct Prover Network
+
+    User->>opreth: Submit txn for sequencing
+    opnode->>opreth: Sequence blocks
+    opbatcher->>L1: Submit sequenced batch
+    aggkit->>opreth: Set GER
+    aggkit->>aggprover: Request aggchain proof
+    aggprover->>proposer: Request aggregation proof
+    proposer->>SP: Request aggchain proof
+    autonumber off
+    SP->>aggprover: aggregation proof
+    autonumber 8
+    aggkit->>aggnode: Submit certificate for settlement
+    aggnode->>SP: Request Pessimistic proof
+    aggnode->>L1: Submit settlement txn
+
+    autonumber off
+    Note over bridge,proposer: Periodical operations
+    bridge-->>L1: Read bridge events
+    aggkit-->>L1: Read GER/bridge events
+    bridge-->>opreth: Read bridge events
+    aggkit-->>opreth: Read GER/bridge events
+    SP-->>proposer: range proof
+```
 
 ## Choose your path
 
