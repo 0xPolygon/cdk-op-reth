@@ -43,10 +43,10 @@ Update the file with relevant information from your `combined.json`. Example con
 
 ```json
 {
-    "rollupManagerAddress": "<polygonRollupManagerAddress-from-combined.json>",
+    "rollupManagerAddress": "<AGGLAYER_MANAGER>",
     "rollupID": <rollupID-from-combined.json>,
     "chainID": <l2ChainID-from-combined.json>,
-    "gasTokenAddress": "<gasTokenAddress-from-combined.json>",
+    "gasTokenAddress": "<GAS_TOKEN_ADDRESS>",
     "bridgeManager": "<ADMIN_ADDR>",
     "sovereignWETHAddress": "0x0000000000000000000000000000000000000000",
     "sovereignWETHAddressIsNotMintable": false,
