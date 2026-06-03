@@ -2,7 +2,8 @@
 
 This document describes the common components required for Polygon Stack deployment that work with any type of consensus network.
 
-> **Note:** Docker images have been tested on AMD64 (linux/amd64). Other architectures are not guaranteed to work.
+> [!NOTE]
+> Docker images have been tested on AMD64 (linux/amd64). Other architectures are not guaranteed to work.
 
 ## Aggkit
 
@@ -13,7 +14,7 @@ This document describes the common components required for Polygon Stack deploym
 ### Environment Variables
 
 ```shell
-# See Component Versions table in README.md for current values
+# See Component Versions table in 00-prerequisites.md for current values
 export aggkit_version="<aggkit_version>"
 ```
 
@@ -54,7 +55,7 @@ You can run individual components or any combination by adjusting the `--compone
 ### Environment Variables
 
 ```shell
-# See Component Versions table in README.md for current values
+# See Component Versions table in 00-prerequisites.md for current values
 export zkevm_bridge_service_version="<zkevm_bridge_service_version>"
 ```
 
@@ -75,3 +76,7 @@ docker run --rm -it \
 
 ### Additional Resources
 - **GitHub**: [0xPolygon/zkevm-bridge-service](https://github.com/0xPolygon/zkevm-bridge-service)
+
+---
+
+**Next:** [Polygon Stack FEP Components →](07-polygon-stack-fep.md) *(FEP only)* — PP deployments end here.
