@@ -22,39 +22,74 @@ Contract docs: https://agglayer.github.io/protocol-team-docs/smart-contracts/v12
 PP is the narrow, bridge-safety proof. It doesn't attest to a chain's state transition — it only proves that withdrawal claims a chain makes against the unified bridge are backed by real deposits, so a misbehaving chain can't drain other chains' assets.
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    box OP Stack (Network)
-        participant opnode as op-node
-        participant opreth as op-reth
-        participant opbatcher as op-batcher
-    end
-    box Polygon Stack
-        participant bridge as bridge-service
-        participant aggkit
-    end
-    box Agglayer
-        participant aggnode as agglayer-node
-    end
-    participant L1
-    participant SP as Succinct Prover Network
+flowchart LR
+    %% External actors
+    User((User))
+    L1[L1]
+    SPN[Succinct Prover<br/>Network]
 
-    User->>opreth: Submit txn for sequencing
-    opnode->>opreth: Sequence blocks
-    opbatcher->>L1: Submit sequenced batch
-    aggkit->>opreth: Set GER
-    aggkit->>aggnode: Submit certificate for settlement
-    aggnode->>SP: Request Pessimistic proof
-    aggnode->>L1: Submit settlement txn
+    %% Trusted Environment boundary
+    subgraph TE["Trusted Environment"]
+        direction TB
 
-    autonumber off
-    Note over bridge,aggkit: Periodical operations
-    bridge-->>L1: Read bridge events
-    aggkit-->>L1: Read GER/bridge events
-    bridge-->>opreth: Read bridge events
-    aggkit-->>opreth: Read GER/bridge events
+        subgraph OPSTACK[" "]
+            direction LR
+            opnode[op-node]
+            opreth[op-reth]
+            opbatcher[op-batcher]
+        end
+
+        subgraph AGGSTACK[" "]
+            direction LR
+            bridgeservice[bridge-service]
+            aggkit[aggkit]
+        end
+
+        subgraph AGGNODE[" "]
+            agglayernode[agglayer-node]
+        end
+    end
+
+    %% ===== Main flow (solid, numbered) =====
+    User -->|"1. Submit txn for sequencing"| opreth
+    opnode -->|"2. Sequence blocks"| opreth
+    opbatcher -->|"3. Submit sequenced batch"| L1
+    aggkit -->|"4. Set GER"| opreth
+    aggkit -->|"5. Submit certificate for settlement"| agglayernode
+    agglayernode -->|"6. Request Pessimistic proof"| SPN
+    agglayernode -->|"7. Submit settlement txn"| L1
+
+    %% ===== Periodical operations (dashed orange) =====
+    bridgeservice -.->|"Read bridge events"| L1
+    bridgeservice -.->|"Read bridge events"| opreth
+    aggkit -.->|"Read GER/bridge events"| bridgeservice
+
+    %% ===== Styling =====
+    classDef opComp stroke:#e03131,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef aggComp stroke:#7950f2,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef l1Box stroke:#1e1e1e,stroke-width:2px,fill:#a5d8ff,color:#1e1e1e
+    classDef userCircle stroke:#1e1e1e,stroke-width:2px,fill:#ffd8a8,color:#1e1e1e
+    classDef spnBox stroke:#f783ac,stroke-width:2px,fill:#fcc2d7,color:#1e1e1e
+
+    class opnode,opreth,opbatcher opComp
+    class aggkit,bridgeservice,agglayernode aggComp
+    class L1 l1Box
+    class User userCircle
+    class SPN spnBox
+
+    style TE stroke:#1e1e1e,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent,color:#1e1e1e
+    style OPSTACK stroke:#e03131,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGSTACK stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGNODE stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+
+    %% Periodical links rendered in orange dashed (indices 7-9, in order added)
+    linkStyle 7 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 8 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 9 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
 ```
+
+> [!NOTE]
+> The dashed arrows are periodic operations: `bridge-service` and `aggkit` continuously read bridge and GER events from L1 and `op-reth`.
 
 ### Full Execution Proof (FEP) — AggchainFEP
 
@@ -63,48 +98,83 @@ Contract docs: https://agglayer.github.io/protocol-team-docs/smart-contracts/v12
 FEP is the strong proof: it cryptographically attests to the chain's full state transition using SP1 (Succinct) zero-knowledge proofs, on top of the bridge-safety guarantee the PP provides.
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    box OP Stack (Network)
-        participant opnode as op-node
-        participant opreth as op-reth
-        participant opbatcher as op-batcher
-    end
-    box Polygon Stack
-        participant bridge as bridge-service
-        participant aggkit
-        participant aggprover as aggkit-prover
-        participant proposer as op-succinct-proposer
-    end
-    box Agglayer
-        participant aggnode as agglayer-node
-    end
-    participant L1
-    participant SP as Succinct Prover Network
+flowchart LR
+    %% External actors
+    User((User))
+    L1[L1]
+    SPN[Succinct Prover<br/>Network]
 
-    User->>opreth: Submit txn for sequencing
-    opnode->>opreth: Sequence blocks
-    opbatcher->>L1: Submit sequenced batch
-    aggkit->>opreth: Set GER
-    aggkit->>aggprover: Request aggchain proof
-    aggprover->>proposer: Request aggregation proof
-    proposer->>SP: Request aggchain proof
-    autonumber off
-    SP->>aggprover: aggregation proof
-    autonumber 8
-    aggkit->>aggnode: Submit certificate for settlement
-    aggnode->>SP: Request Pessimistic proof
-    aggnode->>L1: Submit settlement txn
+    %% Trusted Environment boundary
+    subgraph TE["Trusted Environment"]
+        direction TB
 
-    autonumber off
-    Note over bridge,proposer: Periodical operations
-    bridge-->>L1: Read bridge events
-    aggkit-->>L1: Read GER/bridge events
-    bridge-->>opreth: Read bridge events
-    aggkit-->>opreth: Read GER/bridge events
-    SP-->>proposer: range proof
+        subgraph OPSTACK[" "]
+            direction LR
+            opnode[op-node]
+            opreth[op-reth]
+            opbatcher[op-batcher]
+        end
+
+        subgraph AGGSTACK[" "]
+            direction LR
+            bridgeservice[bridge-service]
+            aggkit[aggkit]
+            aggkitprover[aggkit-prover]
+            opsuccinct[op-succinct-<br/>proposer]
+        end
+
+        subgraph AGGNODE[" "]
+            agglayernode[agglayer-node]
+        end
+    end
+
+    %% ===== Main flow (solid, numbered) =====
+    User -->|"1. Submit txn for sequencing"| opreth
+    opnode -->|"2. Sequence blocks"| opreth
+    opbatcher -->|"3. Submit sequenced batch"| L1
+    aggkit -->|"4. Set GER"| opreth
+    aggkit -->|"5. Request aggchain proof"| aggkitprover
+    aggkitprover -->|"6. Request aggregation Proof"| opsuccinct
+    opsuccinct -->|"7. Request aggchain proof"| SPN
+    aggkit -->|"8. Submit certificate for settlement"| agglayernode
+    agglayernode -->|"9. Request Pessimistic proof"| SPN
+    agglayernode -->|"10. Submit settlement txn"| L1
+
+    %% ===== Periodical operations (dashed orange) =====
+    bridgeservice -.->|"Read bridge events"| L1
+    bridgeservice -.->|"Read bridge events"| opreth
+    aggkit -.->|"Read GER/bridge events"| bridgeservice
+    opsuccinct -.->|"range proof"| SPN
+
+    %% ===== Styling =====
+    classDef opComp stroke:#e03131,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef aggComp stroke:#7950f2,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef succinctComp stroke:#f783ac,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef l1Box stroke:#1e1e1e,stroke-width:2px,fill:#a5d8ff,color:#1e1e1e
+    classDef userCircle stroke:#1e1e1e,stroke-width:2px,fill:#ffd8a8,color:#1e1e1e
+    classDef spnBox stroke:#f783ac,stroke-width:2px,fill:#fcc2d7,color:#1e1e1e
+
+    class opnode,opreth,opbatcher opComp
+    class aggkit,aggkitprover,bridgeservice,agglayernode aggComp
+    class opsuccinct succinctComp
+    class L1 l1Box
+    class User userCircle
+    class SPN spnBox
+
+    style TE stroke:#1e1e1e,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent,color:#1e1e1e
+    style OPSTACK stroke:#e03131,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGSTACK stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGNODE stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+
+    %% Periodical links rendered in orange dashed (indices 10-13, in order added)
+    linkStyle 10 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 11 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 12 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 13 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
 ```
+
+> [!NOTE]
+> The dashed arrows are returns and periodic operations: the Succinct Prover Network returns the `aggregation`/`range` proofs, and `bridge-service`/`aggkit` continuously read bridge and GER events.
 
 ## Choose your path
 

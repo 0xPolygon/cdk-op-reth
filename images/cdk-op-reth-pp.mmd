@@ -1,0 +1,64 @@
+flowchart LR
+    %% External actors
+    User((User))
+    L1[L1]
+    SPN[Succinct Prover<br/>Network]
+
+    %% Trusted Environment boundary
+    subgraph TE["Trusted Environment"]
+        direction TB
+
+        subgraph OPSTACK[" "]
+            direction LR
+            opnode[op-node]
+            opreth[op-reth]
+            opbatcher[op-batcher]
+        end
+
+        subgraph AGGSTACK[" "]
+            direction LR
+            bridgeservice[bridge-service]
+            aggkit[aggkit]
+        end
+
+        subgraph AGGNODE[" "]
+            agglayernode[agglayer-node]
+        end
+    end
+
+    %% ===== Main flow (solid, numbered) =====
+    User -->|"1. Submit txn for sequencing"| opreth
+    opnode -->|"2. Sequence blocks"| opreth
+    opbatcher -->|"3. Submit sequenced batch"| L1
+    aggkit -->|"4. Set GER"| opreth
+    aggkit -->|"5. Submit certificate for settlement"| agglayernode
+    agglayernode -->|"6. Request Pessimistic proof"| SPN
+    agglayernode -->|"7. Submit settlement txn"| L1
+
+    %% ===== Periodical operations (dashed orange) =====
+    bridgeservice -.->|"Read bridge events"| L1
+    bridgeservice -.->|"Read bridge events"| opreth
+    aggkit -.->|"Read GER/bridge events"| bridgeservice
+
+    %% ===== Styling =====
+    classDef opComp stroke:#e03131,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef aggComp stroke:#7950f2,stroke-width:2px,fill:#fff,color:#1e1e1e
+    classDef l1Box stroke:#1e1e1e,stroke-width:2px,fill:#a5d8ff,color:#1e1e1e
+    classDef userCircle stroke:#1e1e1e,stroke-width:2px,fill:#ffd8a8,color:#1e1e1e
+    classDef spnBox stroke:#f783ac,stroke-width:2px,fill:#fcc2d7,color:#1e1e1e
+
+    class opnode,opreth,opbatcher opComp
+    class aggkit,bridgeservice,agglayernode aggComp
+    class L1 l1Box
+    class User userCircle
+    class SPN spnBox
+
+    style TE stroke:#1e1e1e,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent,color:#1e1e1e
+    style OPSTACK stroke:#e03131,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGSTACK stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+    style AGGNODE stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
+
+    %% Periodical links rendered in orange dashed (indices 7-9, in order added)
+    linkStyle 7 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 8 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
+    linkStyle 9 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
