@@ -1,16 +1,19 @@
-# OP Succinct Configuration _(FEP only)_
+# OP Succinct Configuration *(FEP only)*
+
+> [!WARNING]
+> Step 4 publishes a configuration on-chain that controls how the rollup's state is proven. A misconfigured selection will stall proof production. Verify the config values against `opsuccinctl2ooconfig.json` before calling `selectOpSuccinctConfig`.
 
 This document explains how to add and select an op-succinct (L2 output) configuration on-chain using the Aggchain manager.
 
 > [!NOTE]
 > You need to perform this process for every new version of the op-succinct-proposer component you intend to deploy on your network.
 
-## TL;DR
+## Overview
 
 1. Export RPC endpoints, rollup address, and manager private key
 2. Use the op-succinct container to produce `opsuccinctl2ooconfig.json`
 3. Call `addOpSuccinctConfig` with the config values
-4. Call `selectOpSuccinctConfig` to activate the configuration — on first deployment this is all that's needed; on updates, also stop services, adjust configs, and restart services
+4. Call `selectOpSuccinctConfig` to activate the configuration — on first deployment this is all that's needed. On updates to a running network, you must also stop services, adjust configs, and restart them
 
 ## Step 1: Setup Environment Variables
 
@@ -23,7 +26,7 @@ export l1_beacon_rpc_url="https://<your_l1_beacon_rpc>" # L1 Beacon RPC endpoint
 export op_node_url="http://<your_op_node>" # op-node RPC endpoint
 export op_reth_url="http://<your_op_reth>" # op-reth RPC endpoint
 export aggchain_manager_private_key=0x... # Private key of Aggchain manager
-# See Component Versions table in README.md for current values
+# See Component Versions table in 00-prerequisites.md for current values
 export op_succinct_version="<op_succinct_version>"
 export config_name=$(cast keccak "${op_succinct_version}")
 ```
@@ -160,3 +163,7 @@ If the **aggsender**, **aggkit-prover** and **op-succinct-proposer** are already
 
 5. Start the **aggkit-prover** and **op-succinct-proposer**. Wait until the services are healthy
 6. Start the **aggsender**
+
+---
+
+**Next:** [Polygon Stack Common Components →](06-polygon-stack-common.md)

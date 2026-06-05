@@ -1,13 +1,14 @@
-# Polygon Stack FEP Deployment _(FEP only)_
+# Polygon Stack FEP Deployment *(FEP only)*
 
 This document describes how to run the components required for Polygon Stack FEP (Full Execution Proof) deployment.
 
-> **Note:** Docker images have been tested on AMD64 (linux/amd64). Other architectures are not guaranteed to work.
+> [!NOTE]
+> Docker images have been tested on AMD64 (linux/amd64). Other architectures are not guaranteed to work.
 
 ## Environment Variables
 
 ```shell
-# See Component Versions table in README.md for current values
+# See Component Versions table in 00-prerequisites.md for current values
 export aggkit_prover_version="<aggkit_prover_version>"
 export op_succinct_version="<op_succinct_version>"
 ```
@@ -65,3 +66,7 @@ docker run --rm -it \
 
 ### Additional Resources
 - **GitHub**: [agglayer/op-succinct](https://github.com/agglayer/op-succinct)
+
+---
+
+**End of guide.** Once these services are running and healthy, your FEP rollup is operational. Return to the [README](README.md) for an overview, or revisit any chapter for reference.

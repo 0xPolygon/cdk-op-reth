@@ -1,5 +1,8 @@
 # Network Deployment (OP Stack)
 
+> [!WARNING]
+> Step 2 of this chapter deploys L1 contracts and consumes real funds from `DEPLOYER_ADDRESS`. The deployment is irreversible on mainnet. Verify your `intent.toml` carefully before proceeding.
+
 This document explains how to deploy an L2 using the OP Stack's `op-deployer` tool. It follows the official Optimism deployment flow and focuses on the steps most relevant to this repository.
 
 ## References
@@ -7,9 +10,10 @@ This document explains how to deploy an L2 using the OP Stack's `op-deployer` to
 - [Optimism L2 Rollup Tutorial](https://docs.optimism.io/operators/chain-operators/tutorials/create-l2-rollup)
 - [op-deployer Tool Documentation](https://docs.optimism.io/operators/chain-operators/tools/op-deployer)
 
-> **Note**: All commands assume you're running from the repository root.
+> [!NOTE]
+> All commands assume you're running from the repository root.
 
-## TL;DR
+## Overview
 
 1. Initialize an `op-deployer` workdir
 2. Edit `intent.toml` with deployment parameters
@@ -22,13 +26,13 @@ This document explains how to deploy an L2 using the OP Stack's `op-deployer` to
 Set the following environment variables before proceeding:
 
 ```shell
-# 11155111 for Sepolia
-export l1_chain_id=<your-l1-chain_id>
+# L1 chain ID — 11155111 for Sepolia, 1 for Ethereum mainnet
+export l1_chain_id=<your-l1-chain-id>
 export l2_chain_id=<l2ChainID-from-combined.json>
 export l1_rpc_url="https://<your_l1_rpc>"
 export l1_rpc_url_wss="wss://<your_l1_rpc>"
 export deployer_private_key=0x... # private key of DEPLOYER_ADDRESS
-# See Component Versions table in README.md for current values
+# See Component Versions table in 00-prerequisites.md for current values
 export op_deployer_version="<op_deployer_version>"
 export op_reth_version="<op_reth_version>"
 ```
@@ -51,7 +55,7 @@ Edit the generated `deployer/intent.toml` with your deployment parameters. Here'
 ```toml
 configType = "standard-overrides"
 opDeployerVersion = "<generated>"
-l1ChainID = <your-l1-chain_id>
+l1ChainID = <your-l1-chain-id>
 opcmAddress = "<generated>"
 fundDevAccounts = true
 l1ContractsLocator = "embedded"
@@ -62,10 +66,10 @@ l2ContractsLocator = "embedded"
 
 [[chains]]
   id = "<generated>"
-  baseFeeVaultRecipient = "<ADMIN_ADDR>"
-  l1FeeVaultRecipient = "<ADMIN_ADDR>"
-  sequencerFeeVaultRecipient = "<ADMIN_ADDR>"
-  operatorFeeVaultRecipient = "<ADMIN_ADDR>"
+  baseFeeVaultRecipient = "<ADMIN_ADDRESS>"
+  l1FeeVaultRecipient = "<ADMIN_ADDRESS>"
+  sequencerFeeVaultRecipient = "<ADMIN_ADDRESS>"
+  operatorFeeVaultRecipient = "<ADMIN_ADDRESS>"
   eip1559DenominatorCanyon = 250
   eip1559Denominator = 50
   eip1559Elasticity = 6
@@ -73,22 +77,22 @@ l2ContractsLocator = "embedded"
   operatorFeeScalar = 0
   operatorFeeConstant = 0
   useRevenueShare = true
-  chainFeesRecipient = "<ADMIN_ADDR>"
+  chainFeesRecipient = "<ADMIN_ADDRESS>"
   minBaseFee = 0
   daFootprintGasScalar = 0
   [chains.roles]
-    l1ProxyAdminOwner = "<ADMIN_ADDR>"
-    l2ProxyAdminOwner = "<ADMIN_ADDR>"
-    systemConfigOwner = "<ADMIN_ADDR>"
+    l1ProxyAdminOwner = "<ADMIN_ADDRESS>"
+    l2ProxyAdminOwner = "<ADMIN_ADDRESS>"
+    systemConfigOwner = "<ADMIN_ADDRESS>"
     unsafeBlockSigner = "<BATCHER_ADDRESS>"
     batcher = "<BATCHER_ADDRESS>"
-    proposer = "<ADMIN_ADDR>"
-    challenger = "<ADMIN_ADDR>"
+    proposer = "<ADMIN_ADDRESS>"
+    challenger = "<ADMIN_ADDRESS>"
 ```
 
 ## Step 2: Deploy L1 Contracts
 
-When your `intent.toml` is ready, deploy the L1 contracts required by the OP Stack:
+Once your `intent.toml` is ready, deploy the L1 contracts required by the OP Stack:
 
 ```shell
 docker run --rm -v "$(pwd)/deployer:/deployer" --entrypoint /usr/local/bin/op-deployer \
@@ -106,26 +110,38 @@ This writes the deployer state to `deployer/state.json`.
 This step is required when you have pre-deployed contracts or existing chain allocs (for example, from a `polygon-genesis.json`). You must merge those allocs into the op-deployer state so the final L2 genesis includes the pre-deployed addresses and balances.
 
 The commands below:
+
 1. Extract the base64/gzip-encoded allocs from the op-deployer state
 2. Merge them with your Polygon alloc fragment
-3. Write the merged allocs back into the state
+3. Re-encode and write the merged allocs back into the state
 
 ```shell
-# Extract the allocs
-cat deployer/state.json | jq -r '.opChainDeployments[].allocs' | base64 -d | gzip -d > allocs.json
+# Path to the polygon-genesis.json produced in chapter 2
+export polygon_genesis_path=<path/to/polygon-genesis.json>
 
-# Merge with your Polygon genesis file
-jq -s add allocs.json <path/to/polygon-genesis.json> | gzip | base64 > merge
+# 1. Extract the existing allocs from the op-deployer state
+jq -r '.opChainDeployments[].allocs' deployer/state.json \
+  | base64 -d \
+  | gzip -d > allocs.json
 
-# Create a copy of the original state
-cp deployer/state.json deployer/original-state.json
+# 2. Merge with the Polygon genesis and re-encode
+jq -s add allocs.json "${polygon_genesis_path}" \
+  | gzip \
+  | base64 -w 0 > merged-allocs.b64
 
-# Replace the original allocs by the merged
-cat deployer/state.json | jq ".opChainDeployments[].allocs=\"$( cat merge )\"" > state.json && mv state.json deployer/state.json
+# 3. Back up the original state and write the merged allocs back
+cp deployer/state.json deployer/state.json.bak
+jq --rawfile merged merged-allocs.b64 \
+   '.opChainDeployments[].allocs = $merged' \
+   deployer/state.json > deployer/state.json.new
+mv deployer/state.json.new deployer/state.json
 
 # Cleanup
-rm allocs.json merge
+rm allocs.json merged-allocs.b64
 ```
+
+> [!TIP]
+> Verify the merge before continuing: `jq -r '.opChainDeployments[].allocs' deployer/state.json | base64 -d | gzip -d | jq 'keys | length'` should report a higher account count than the same command against `deployer/state.json.bak`. Keep `state.json.bak` until you've confirmed step 4 succeeds.
 
 ## Step 4: Generate Final Artifacts
 
@@ -163,3 +179,6 @@ The sequencer is responsible for ordering transactions from users, building L2 b
 
 The batcher (`op-batcher`) collects L2 transactions and submits them as batches to L1. It ensures L2 transaction data is available on L1 for data availability and enables users to reconstruct the L2 state.
 
+---
+
+**Next:** [Rollup Initialization →](04-rollup-initialization.md)

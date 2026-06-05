@@ -1,21 +1,26 @@
 # Rollup Initialization
 
-> **Warning:** This step is irreversible. Once the rollup is initialized on-chain, it cannot be undone. Double-check all parameters before proceeding.
+> [!WARNING]
+> This step is irreversible. Once the rollup is initialized on-chain, it cannot be undone. Double-check all parameters before proceeding.
 
 This document explains how to generate rollup initialization artifacts and run the rollup initialization script for an Agglayer rollup.
 
 ## References
 
-- [Initialize Rollup README](https://github.com/agglayer/agglayer-contracts/blob/main/tools/initializeRollup/README.md) - Full usage details, configuration options, and examples
+- [Initialize Rollup README](https://github.com/agglayer/agglayer-contracts/blob/main/tools/initializeRollup/README.md) — Full usage details, configuration options, and examples
 
-## TL;DR
+## Overview
 
-1. Export required environment variables (RPC endpoints, starting block, op-succinct image tag)
-2. Generate `aggchainParams` (L2 output at a block) and save to a working directory
-3. Use the op-succinct image to fetch the L2 output-oracle configuration
-4. Fill the initialization JSON and run the Hardhat initialization script
+- **PP** deployments: skip to [Step 4](#step-4-prepare-rollup-initialization-json).
+- **FEP** deployments: complete the FEP-only setup first ([Steps 1–3](#fep-only-setup)), then continue with Step 4.
 
-## Step 1: Setup Environment Variables *(FEP only)*
+---
+
+## FEP-only setup
+
+The next three steps apply only to FEP deployments. PP deployments skip ahead to [Step 4](#step-4-prepare-rollup-initialization-json).
+
+### Step 1: Setup Environment Variables *(FEP only)*
 
 Export the following variables (replace placeholders with values for your environment):
 
@@ -24,14 +29,17 @@ export l1_rpc_url="https://<your_l1_rpc>"
 export l1_beacon_rpc_url="https://<your_l1_beacon_rpc>"
 export op_node_url="https://<your_op_node>"
 export op_reth_url="http://<your_op_reth>"
-export starting_block_number=1
-# See Component Versions table in README.md for current values
+# Set to the L2 block at which proof generation should start (typically the L2 genesis block).
+# Do not leave at 1 unless you genuinely want to start proving from block 1.
+export starting_block_number=<your-starting-block-number>
+# See Component Versions table in 00-prerequisites.md for current values
 export op_succinct_version="<op_succinct_version>"
 ```
 
-> **Tip**: Keep these values private and do not commit them to version control.
+> [!TIP]
+> Keep these values private and do not commit them to version control.
 
-## Step 2: Create Initialization Working Directory *(FEP only)*
+### Step 2: Create Initialization Working Directory *(FEP only)*
 
 Create a directory for the initialization run and write a minimal `.env` file consumed by the op-succinct helper:
 
@@ -48,7 +56,7 @@ STARTING_BLOCK_NUMBER="${starting_block_number}"
 EOF
 ```
 
-## Step 3: Fetch L2 Output-Oracle Configuration *(FEP only)*
+### Step 3: Fetch L2 Output-Oracle Configuration *(FEP only)*
 
 Run the op-succinct container to generate/fetch the L2 output-oracle configuration file (`opsuccinctl2ooconfig.json`) into the working directory:
 
@@ -63,9 +71,12 @@ docker run --rm -it \
 
 After completion, you should have `opsuccinctl2ooconfig.json` (or other output files) in the current directory. This can be used to help construct `aggchainParams.initParams`.
 
+---
+
 ## Step 4: Prepare Rollup Initialization JSON
 
-> **Note:** The commands in this step are expected to be run from the `agglayer-contracts` root directory.
+> [!NOTE]
+> The commands in this step are expected to be run from the `agglayer-contracts` root directory.
 
 Copy the example initialization JSON file:
 
@@ -80,7 +91,7 @@ Edit the file with your values.
 ```json
 {
     "type": "EOA",
-    "trustedSequencerURL": "http://<your_l1_rpc>",
+    "trustedSequencerURL": "http://<your_aggsender_rpc>",
     "networkName": "<network-name>",
     "trustedSequencer": "<AGGSENDER_ADDRESS>",
     "chainID": <l2ChainID-from-combined.json>,
@@ -114,7 +125,7 @@ Edit the file with your values.
 ```json
 {
     "type": "EOA",
-    "trustedSequencerURL": "http://<your_l1_rpc>",
+    "trustedSequencerURL": "http://<your_aggsender_rpc>",
     "networkName": "<network-name>",
     "trustedSequencer": "<AGGSENDER_ADDRESS>",
     "chainID": <l2ChainID-from-combined.json>,
@@ -156,9 +167,13 @@ Edit the file with your values.
 
 ## Step 5: Run the Initialization Script
 
-Install dependencies and run the Hardhat initialization script (example uses `sepolia` network):
+Install dependencies and run the Hardhat initialization script. Substitute `mainnet` for production deployments:
 
 ```shell
 npm install
 npx hardhat run ./tools/initializeRollup/initializeRollup.ts --network sepolia
 ```
+
+---
+
+**Next:** [OP Succinct Configuration →](05-op-succinct-config.md) *(FEP only)* — PP deployments continue to [Polygon Stack Common Components →](06-polygon-stack-common.md)
