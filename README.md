@@ -22,6 +22,7 @@ Contract docs: https://agglayer.github.io/protocol-team-docs/smart-contracts/v12
 PP is the narrow, bridge-safety proof. It doesn't attest to a chain's state transition — it only proves that withdrawal claims a chain makes against the unified bridge are backed by real deposits, so a misbehaving chain can't drain other chains' assets.
 
 ```mermaid
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}} }%%
 flowchart LR
     %% External actors
     User((User))
@@ -45,9 +46,7 @@ flowchart LR
             aggkit[aggkit]
         end
 
-        subgraph AGGNODE[" "]
-            agglayernode[agglayer-node]
-        end
+        agglayernode[agglayer-node]
     end
 
     %% ===== Main flow (solid, numbered) =====
@@ -62,7 +61,7 @@ flowchart LR
     %% ===== Periodical operations (dashed orange) =====
     bridgeservice -.->|"Read bridge events"| L1
     bridgeservice -.->|"Read bridge events"| opreth
-    aggkit -.->|"Read GER/bridge events"| bridgeservice
+    aggkit -.->|"Read GER/bridge events"| L1
 
     %% ===== Styling =====
     classDef opComp stroke:#e03131,stroke-width:2px,fill:#fff,color:#1e1e1e
@@ -80,9 +79,8 @@ flowchart LR
     style TE stroke:#1e1e1e,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent,color:#1e1e1e
     style OPSTACK stroke:#e03131,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
     style AGGSTACK stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
-    style AGGNODE stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
 
-    %% Periodical links rendered in orange dashed (indices 7-9, in order added)
+    %% Periodical links rendered in orange dashed (indices 7-9)
     linkStyle 7 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
     linkStyle 8 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
     linkStyle 9 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
@@ -123,9 +121,7 @@ flowchart LR
             opsuccinct[op-succinct-<br/>proposer]
         end
 
-        subgraph AGGNODE[" "]
-            agglayernode[agglayer-node]
-        end
+        agglayernode[agglayer-node]
     end
 
     %% ===== Main flow (solid, numbered) =====
@@ -143,7 +139,7 @@ flowchart LR
     %% ===== Periodical operations (dashed orange) =====
     bridgeservice -.->|"Read bridge events"| L1
     bridgeservice -.->|"Read bridge events"| opreth
-    aggkit -.->|"Read GER/bridge events"| bridgeservice
+    aggkit -.->|"Read GER/bridge events"| L1
     opsuccinct -.->|"range proof"| SPN
 
     %% ===== Styling =====
@@ -164,9 +160,8 @@ flowchart LR
     style TE stroke:#1e1e1e,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent,color:#1e1e1e
     style OPSTACK stroke:#e03131,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
     style AGGSTACK stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
-    style AGGNODE stroke:#7950f2,stroke-width:2px,stroke-dasharray: 8 8,fill:transparent
 
-    %% Periodical links rendered in orange dashed (indices 10-13, in order added)
+    %% Periodical links rendered in orange dashed (indices 10-13)
     linkStyle 10 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
     linkStyle 11 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
     linkStyle 12 stroke:#f08c00,stroke-width:2px,stroke-dasharray: 4 6
