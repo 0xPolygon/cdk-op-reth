@@ -108,24 +108,16 @@ Run the Hardhat script to assemble the sovereign genesis using your parameter fi
 npx hardhat run ./tools/createSovereignGenesis/create-sovereign-genesis.ts --network sepolia
 ```
 
-The script produces `genesis-rollupID-<id>.json` and `output-rollupID-<id>.json` files under `./tools/createSovereignGenesis/`, where `<id>` is your `rollupID`.
+The script produces `genesis-rollupID-*.json` and `output-rollupID-*.json` files under `./tools/createSovereignGenesis/` (the tool appends your `rollupID` and a datetime to each name).
 
 ## Step 5: Rename Outputs
 
-Rename the generated artifacts to the canonical names used by other scripts in this repository. Use the explicit `rollupID` rather than a wildcard so the rename fails fast if the previous step produced unexpected files:
+Rename the generated artifacts to the canonical names used by other scripts in this repository:
 
 ```shell
-# Use the rollupID value you set in Step 2 (e.g., 42)
-export rollup_id=<your-rollupID>
-
-mv ./tools/createSovereignGenesis/genesis-rollupID-${rollup_id}.json \
-   ./tools/createSovereignGenesis/polygon-genesis.json
-mv ./tools/createSovereignGenesis/output-rollupID-${rollup_id}.json \
-   ./tools/createSovereignGenesis/polygon-genesis-info.json
+mv ./tools/createSovereignGenesis/genesis-rollupID-*.json ./tools/createSovereignGenesis/polygon-genesis.json
+mv ./tools/createSovereignGenesis/output-rollupID-*.json ./tools/createSovereignGenesis/polygon-genesis-info.json
 ```
-
-> [!TIP]
-> If `mv` fails because the source file does not exist, list the directory and confirm Step 4 produced the expected `rollupID` suffix before retrying.
 
 ---
 

@@ -91,7 +91,7 @@ Edit the file with your values.
 ```json
 {
     "type": "EOA",
-    "trustedSequencerURL": "http://<your_l1_rpc>",
+    "trustedSequencerURL": "http://<your_aggsender_rpc>",
     "networkName": "<network-name>",
     "trustedSequencer": "<AGGSENDER_ADDRESS>",
     "chainID": <l2ChainID-from-combined.json>,
@@ -125,7 +125,7 @@ Edit the file with your values.
 ```json
 {
     "type": "EOA",
-    "trustedSequencerURL": "http://<your_l1_rpc>",
+    "trustedSequencerURL": "http://<your_aggsender_rpc>",
     "networkName": "<network-name>",
     "trustedSequencer": "<AGGSENDER_ADDRESS>",
     "chainID": <l2ChainID-from-combined.json>,
