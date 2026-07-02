@@ -29,9 +29,8 @@ export l1_rpc_url="https://<your_l1_rpc>"
 export l1_beacon_rpc_url="https://<your_l1_beacon_rpc>"
 export op_node_url="https://<your_op_node>"
 export op_reth_url="http://<your_op_reth>"
-# Set to the L2 block at which proof generation should start (typically the L2 genesis block).
-# Do not leave at 1 unless you genuinely want to start proving from block 1.
-export starting_block_number=<your-starting-block-number>
+# For FEP, it needs to be 1
+export starting_block_number=1
 # See Component Versions table in 00-prerequisites.md for current values
 export op_succinct_version="<op_succinct_version>"
 ```
