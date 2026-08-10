@@ -31,6 +31,8 @@ npm install
 ```
 
 ## Step 2: Create Parameter File
+> [!WARNING]
+> The `aggOracleOwner` address will be used on L2. Make sure this address is accessible (i.e. you control its private key) on the L2 network, otherwise you will lose the ability to manage the AggOracle.
 
 Copy the example parameter file:
 

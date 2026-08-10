@@ -158,6 +158,8 @@ Edit the file with your values.
                 "url": "https://<your_aggsender_rpc>"
             }
         ],
+        "initOwnedAggchainVKey": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "initAggchainVKeySelector": "0x00000000",
         "threshold": 1,
         "vKeyManager": "<ADMIN_ADDRESS>"
     }
